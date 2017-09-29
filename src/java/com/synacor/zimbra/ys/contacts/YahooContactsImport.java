@@ -1,14 +1,5 @@
 package com.synacor.zimbra.ys.contacts;
 
-import static com.zimbra.common.mailbox.ContactConstants.A_email;
-import static com.zimbra.common.mailbox.ContactConstants.A_email2;
-import static com.zimbra.common.mailbox.ContactConstants.A_firstName;
-import static com.zimbra.common.mailbox.ContactConstants.A_fullName;
-import static com.zimbra.common.mailbox.ContactConstants.A_imAddress1;
-import static com.zimbra.common.mailbox.ContactConstants.A_lastName;
-import static com.zimbra.common.mailbox.ContactConstants.A_nickname;
-import static com.zimbra.common.mailbox.ContactConstants.A_workEmail1;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -70,6 +61,8 @@ public class YahooContactsImport implements DataImport {
                     if(jsonObj.has("contacts")) {
                         if(jsonObj.has("contact") && jsonObj.get("contact").isJsonArray()) {
                             jsonContacts = jsonObj.get("contact").getAsJsonArray();
+                            JsonElement contactElement = jsonContacts.get(0);
+                            YahooContactsUtil.parseYContact(contactElement.getAsJsonObject(), mDataSource);
                         }
                     }
                 }
@@ -172,21 +165,5 @@ public class YahooContactsImport implements DataImport {
     public void importData(List<Integer> folderIds, boolean fullSync) throws ServiceException {
         Pair<String, String> tokenAndGuid = getAccessTokenAndGuid();
 
-    }
-
-    private static String getFileAs(Map<String, String> fields) {
-        if (!fields.containsKey(A_firstName) &&
-            !fields.containsKey(A_lastName)) {
-            String fileAs;
-            if ((fileAs = fields.get(A_fullName)) != null ||
-                (fileAs = fields.get(A_nickname)) != null ||
-                (fileAs = fields.get(A_email)) != null ||
-                (fileAs = fields.get(A_email2)) != null ||
-                (fileAs = fields.get(A_workEmail1)) != null ||
-                (fileAs = fields.get(A_imAddress1)) != null) {
-                return fileAs;
-            }
-        }
-        return null;
     }
 }

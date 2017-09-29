@@ -1,0 +1,17 @@
+In order to use Yahoo Contacts
+
+1) Deploy this extension to /opt/zimbra/lib/ext/oauth2_datasources and restart mailboxd 
+2) set up the following localconfig keys:
+ - yahoo_oauth2_client_secret (set to your OAuth2 client secret) 
+ - yahoo_oauth2_client_id (set to your OAuth2 client ID)
+ 
+ 3) Create a datasource with type "oauth"
+ e.g. via zmprov:
+
+
+zmprov cds user1@zcs-dev.test oauth myadress@yahoo.com zimbraDataSourceEnabled TRUE zimbraDataSourceFolderId 7 zimbraDataSourceImportClassName com.synacor.zimbra.YahooContactsImport
+
+ 4) obtain an oauth2 refresh token from Yahoo API and assign it to the datasource:
+
+e.g. via zmprov:
+zmprov mds user1@zcs-dev.test myadress@yahoo.com zimbraDataSourceOAuthRefreshToken "AAwee1nfwk3VsVdNHR.l0_jzuXvPNiAt0DBOcRm9w9zq0dbA" 
