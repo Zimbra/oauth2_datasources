@@ -1,0 +1,45 @@
+<project name="oauth2_datasources" default="jar">
+  <import file="../zm-zcs/ant-global.xml" />
+  <property name="ext.name" value="oauth2_datasources"/>
+  <property name="dist.lib.dir" location="${dist.dir}/lib"/>
+  <property name="dist.lib.ext.dir" location="${dist.lib.dir}/ext"/>
+  <property name="jar.deploy.dir" location="${zimbra.home.dir}/lib/ext/${ext.name}"/>
+
+  <!-- zimbra.extension.class and implementation.title are used by zimbra-jar target to generate jar manifest -->
+  <property name="zimbra.extension.class" value="com.synacor.zimbra.OAuth2DataSourcesExtension"/>
+  <property name="implementation.title" value="Extension with a collection of DataImport classes for external OAuth2 resources"/>
+
+  <target name="build-init">
+    <mkdir dir="${build.classes.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.lib.dir}"/>
+    <mkdir dir="${dist.lib.ext.dir}"/>
+  </target>
+
+  <!-- dist target is used by packaging scripts -->
+  <target name="dist" depends="jar" description="Copies jar to dist dir so that packaging scripts can pick it up from there">
+    <copy todir="${dist.lib.ext.dir}">
+      <fileset dir="${build.dir}" includes="*.jar" />
+    </copy>
+  </target>
+
+  <!-- this target uses common compile and zimbra-jar targets defined in ant-global.xml -->
+  <target name="jar" depends="compile,zimbra-jar" description="Creates the jar file" />
+
+  <!-- this target drops nginx-lookup.jar file into /opt/zimbra/lib/ext/oauth2_datasources folder and restarts mailboxd -->
+  <target name="deploy" depends="jar" description="oauth2_datasources">
+    <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
+    <delete dir="${jar.deploy.dir}"/>
+  	<mkdir dir="${jar.deploy.dir}"/>
+    <copy todir="${jar.deploy.dir}">
+      <fileset dir="${build.dir}" includes="${jar.file}" />
+    </copy>
+    <ant dir="${server.dir}" target="start-webserver" inheritAll="false"/>
+  </target>
+
+  <target name="undeploy" description="remove nginx lookup extension from local ZCS instance">
+    <ant dir="${server.dir}" target="stop-webserver"/>
+    <delete dir="${jar.deploy.dir}"/>
+    <ant dir="${server.dir}" target="start-webserver"/>
+  </target>
+</project>
