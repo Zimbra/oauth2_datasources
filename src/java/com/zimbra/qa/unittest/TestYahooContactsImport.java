@@ -58,7 +58,7 @@ public class TestYahooContactsImport {
     public void test() throws ServiceException {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = TestUtil.createFolder(zmbox, "/testCustomDS");
-        ZOAuthDataSource zds = new ZOAuthDataSource(yahooTestAccount, true, testToken, "https://api.login.yahoo.com/oauth2/get_token", folder.getId(), "com.synacor.zimbra.ys.contacts.YahooContactsImport", true);
+        ZOAuthDataSource zds = new ZOAuthDataSource(yahooTestAccount, true, testToken, "https://api.login.yahoo.com/oauth2/get_token", folder.getId(), "com.synacor.zimbra.OAuthDataImport", true);
         String dsId = zmbox.createDataSource(zds);
         zds.setId(dsId);
         String result = zmbox.testDataSource(zds);
