@@ -6,7 +6,10 @@ import com.zimbra.cs.extension.ExtensionException;
 import com.zimbra.cs.extension.ZimbraExtension;
 import com.zimbra.qa.unittest.TestYahooContactsImport;
 import com.zimbra.qa.unittest.ZimbraSuite;
-
+/**
+ * @author Greg Solovyev
+ *
+ */
 public class OAuth2DataSourcesExtension implements ZimbraExtension {
 
     @Override

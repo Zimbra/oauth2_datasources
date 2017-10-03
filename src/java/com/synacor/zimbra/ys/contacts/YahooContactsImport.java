@@ -32,6 +32,10 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.ParsedContact;
+/**
+ * @author Greg Solovyev
+ *
+ */
 public class YahooContactsImport implements DataImport {
     private static String DEFAULT_CONTACTS_URL = "https://social.yahooapis.com/v1/user/%s/contacts?format=%s&count=%d";
 
