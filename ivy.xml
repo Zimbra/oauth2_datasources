@@ -9,6 +9,7 @@
   <dependency org="log4j" name="log4j" rev="1.2.16" />
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
   <dependency org="commons-codec" name="commons-codec" rev="1.7"/>
+  <dependency org="commons-io" name="commons-io" rev="1.4"/>
   <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.2"/>
   <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.2"/>
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.5"/>

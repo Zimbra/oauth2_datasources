@@ -1,4 +1,4 @@
-<project name="oauth2_datasources" default="jar">
+<project name="oauth2_datasources" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant" >
   <import file="../zm-zcs/ant-global.xml" />
   <property name="ext.name" value="oauth2_datasources"/>
   <property name="dist.lib.dir" location="${dist.dir}/lib"/>
@@ -31,8 +31,10 @@
     <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
     <delete dir="${jar.deploy.dir}"/>
   	<mkdir dir="${jar.deploy.dir}"/>
+    <ivy:install organisation="com.google.code.gson" module="gson" revision="2.8.1" settingsRef="dev.settings" from="chain-resolver" to="build-dist" overwrite="true" transitive="false" type="jar"/>
     <copy todir="${jar.deploy.dir}">
       <fileset dir="${build.dir}" includes="${jar.file}" />
+      <fileset dir="${dist.dir}" includes="*.jar" />
     </copy>
     <ant dir="${server.dir}" target="start-webserver" inheritAll="false"/>
   </target>

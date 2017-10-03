@@ -1,13 +1,5 @@
 package com.synacor.zimbra.ys.contacts;
-
-import static com.zimbra.common.mailbox.ContactConstants.A_email;
-import static com.zimbra.common.mailbox.ContactConstants.A_email2;
-import static com.zimbra.common.mailbox.ContactConstants.A_firstName;
-import static com.zimbra.common.mailbox.ContactConstants.A_fullName;
-import static com.zimbra.common.mailbox.ContactConstants.A_imAddress1;
-import static com.zimbra.common.mailbox.ContactConstants.A_lastName;
-import static com.zimbra.common.mailbox.ContactConstants.A_nickname;
-import static com.zimbra.common.mailbox.ContactConstants.A_workEmail1;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,8 +31,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mime.ParsedContact;
 public class YahooContactsImport implements DataImport {
-    private static String DEFAULT_CONTACTS_URL = "https://social.yahooapis.com/v1/user/%s/contactsformat=%s&count=%d";
+    private static String DEFAULT_CONTACTS_URL = "https://social.yahooapis.com/v1/user/%s/contacts?format=%s&count=%d";
 
     private DataSource mDataSource;
     public YahooContactsImport(DataSource ds) {
@@ -54,37 +47,52 @@ public class YahooContactsImport implements DataImport {
             YSocialURLPattern = DEFAULT_CONTACTS_URL;
         }
         Pair<String, String> tokenAndGuid = getAccessTokenAndGuid();
-        HttpGet get = new HttpGet(String.format(YSocialURLPattern, tokenAndGuid.getSecond(), "json", 2));
+        HttpGet get = new HttpGet(String.format(YSocialURLPattern, tokenAndGuid.getSecond(), "json", 10));
         String authorizationHeader = String.format("Bearer %s", tokenAndGuid.getFirst());
         get.addHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
         HttpClient client = ZimbraHttpClientManager.getInstance().getExternalHttpClient();
         JsonArray jsonContacts = null;
         HttpResponse response = null;
+        String respContent = "";
+        ParsedContact testContact = null;
         try {
             response = client.execute(get);
-            try(JsonReader reader = new JsonReader(new InputStreamReader(response.getEntity().getContent()))) {
-                JsonParser parser = new JsonParser();
-                JsonElement jsonResponse = parser.parse(reader);
-                if(jsonResponse != null && jsonResponse.isJsonObject()) {
-                    JsonObject jsonObj = jsonResponse.getAsJsonObject();
-                    if(jsonObj.has("contacts")) {
-                        if(jsonObj.has("contact") && jsonObj.get("contact").isJsonArray()) {
-                            jsonContacts = jsonObj.get("contact").getAsJsonArray();
+            respContent = IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+            JsonParser parser = new JsonParser();
+            JsonElement jsonResponse = parser.parse(respContent);
+            if(jsonResponse != null && jsonResponse.isJsonObject()) {
+                JsonObject jsonObj = jsonResponse.getAsJsonObject();
+                if(jsonObj.has("contacts") && jsonObj.get("contacts").isJsonObject()) {
+                    JsonObject contactsObject = jsonObj.get("contacts").getAsJsonObject();
+                    if(contactsObject.has("contact") && contactsObject.get("contact").isJsonArray()) {
+                        jsonContacts = contactsObject.get("contact").getAsJsonArray();
+                        for(JsonElement contactElement : jsonContacts) {
+                            ParsedContact contact = YahooContactsUtil.parseYContact(contactElement.getAsJsonObject(), mDataSource);
+                            if(contact != null) {
+                                testContact = contact;
+                                break;
+                            }
                         }
+                    } else {
+                        ZimbraLog.extensions.debug("Did not find 'contact' element in 'contacts' object");
                     }
+                } else {
+                    ZimbraLog.extensions.debug("Did not find 'contacts' element in JSON response object");
                 }
+            } else {
+                ZimbraLog.extensions.debug("Did not find JSON response object");
             }
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed to fetch contacts from  Yahoo Contacts API for testing", e);
+        } catch (UnsupportedOperationException | IOException e) {
+            throw ServiceException.FAILURE("Data source test failed. Failed to fetch contacts from  Yahoo Contacts API for testing", e);
         }
-        if(jsonContacts == null || jsonContacts.size() == 0) {
+        if(testContact == null) {
             int respCode = 0;
             String respLine = "";
             if(response != null) {
                 respCode = response.getStatusLine().getStatusCode();
                 respLine = response.getStatusLine().getReasonPhrase();
             }
-            throw ServiceException.FAILURE(String.format("Failed to fetch contacts from  Yahoo Contacts API for testing. Response status code %d. Respose status line: %s", respCode, respLine), null);
+            throw ServiceException.FAILURE(String.format("Data source test failed. Failed to fetch contacts from  Yahoo Contacts API for testing. Response status code %d. Response status line: %s. Response body %s", respCode, respLine, respContent), null);
         }
     }
 
@@ -144,7 +152,7 @@ public class YahooContactsImport implements DataImport {
                         parser.skipValue();
                     }
                     if(YGuid != null && accessToken != null && refreshToken != null) {
-                        if(!refreshToken.equalsIgnoreCase(tokenUrl)) {
+                        if(!refreshToken.equalsIgnoreCase(refreshToken)) {
                             Map<String, Object> attrs = mDataSource.getAttrs(false);
                             attrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshToken, refreshToken);
                             Provisioning.getInstance().modifyDataSource(mDataSource.getAccount(), mDataSource.getId(), attrs);
@@ -172,21 +180,5 @@ public class YahooContactsImport implements DataImport {
     public void importData(List<Integer> folderIds, boolean fullSync) throws ServiceException {
         Pair<String, String> tokenAndGuid = getAccessTokenAndGuid();
 
-    }
-
-    private static String getFileAs(Map<String, String> fields) {
-        if (!fields.containsKey(A_firstName) &&
-            !fields.containsKey(A_lastName)) {
-            String fileAs;
-            if ((fileAs = fields.get(A_fullName)) != null ||
-                (fileAs = fields.get(A_nickname)) != null ||
-                (fileAs = fields.get(A_email)) != null ||
-                (fileAs = fields.get(A_email2)) != null ||
-                (fileAs = fields.get(A_workEmail1)) != null ||
-                (fileAs = fields.get(A_imAddress1)) != null) {
-                return fileAs;
-            }
-        }
-        return null;
     }
 }
