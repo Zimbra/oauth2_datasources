@@ -4,7 +4,9 @@ import com.zimbra.cs.account.DataSource;
 
 import java.util.List;
 
+import com.zimbra.client.ZDataSource;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource.DataImport;
 /**
  * @author Greg Solovyev
@@ -13,23 +15,32 @@ import com.zimbra.cs.account.DataSource.DataImport;
  */
 public class OAuthDataImport implements DataImport {
     private DataImport implementation;
+    private String source = null;
     public OAuthDataImport(DataSource ds) {
-        String sourceURL = ds.getOauthRefreshTokenUrl();
-        if(sourceURL.indexOf("api.login.yahoo.com/oauth2/get_token") > -1) {
+        source = ds.getHost();
+        if(source.equalsIgnoreCase(ZDataSource.SOURCE_HOST_YAHOO)) {
             implementation = new YahooContactsImport(ds);
         } else {
-            throw new UnsupportedOperationException(String.format("No known DataImport implementation for oauth URL %", sourceURL));
+            ZimbraLog.extensions.error(new UnsupportedOperationException(String.format("No known DataImport implementation for %s", source)));
         }
     }
 
     @Override
     public void test() throws ServiceException {
-        implementation.test();
+        if(implementation == null) {
+            throw new UnsupportedOperationException(String.format("No known DataImport implementation for %s", source));
+        } else {
+            implementation.test();
+        }
 
     }
 
     @Override
     public void importData(List<Integer> folderIds, boolean fullSync) throws ServiceException {
-        implementation.importData(folderIds, fullSync);
+        if(implementation == null) {
+            throw new UnsupportedOperationException(String.format("No known DataImport implementation for %s", source));
+        } else {
+            implementation.importData(folderIds, fullSync);
+        }
     }
 }
