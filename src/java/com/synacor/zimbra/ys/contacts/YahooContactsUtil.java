@@ -59,7 +59,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.ParsedContact;
-
+/**
+ * @author Greg Solovyev
+ *
+ */
 @SuppressWarnings("serial")
 public class YahooContactsUtil {
     static enum YContactFieldType {

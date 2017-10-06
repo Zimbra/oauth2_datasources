@@ -2,8 +2,40 @@
  * 
  */
 package com.synacor.zimbra.ys.contacts;
-import static com.zimbra.common.mailbox.ContactConstants.*;
-import static org.junit.Assert.*;
+import static com.zimbra.common.mailbox.ContactConstants.A_anniversary;
+import static com.zimbra.common.mailbox.ContactConstants.A_birthday;
+import static com.zimbra.common.mailbox.ContactConstants.A_company;
+import static com.zimbra.common.mailbox.ContactConstants.A_email;
+import static com.zimbra.common.mailbox.ContactConstants.A_email2;
+import static com.zimbra.common.mailbox.ContactConstants.A_firstName;
+import static com.zimbra.common.mailbox.ContactConstants.A_homeCity;
+import static com.zimbra.common.mailbox.ContactConstants.A_homeCountry;
+import static com.zimbra.common.mailbox.ContactConstants.A_homePhone;
+import static com.zimbra.common.mailbox.ContactConstants.A_homePhone2;
+import static com.zimbra.common.mailbox.ContactConstants.A_homePostalCode;
+import static com.zimbra.common.mailbox.ContactConstants.A_homeState;
+import static com.zimbra.common.mailbox.ContactConstants.A_homeStreet;
+import static com.zimbra.common.mailbox.ContactConstants.A_lastName;
+import static com.zimbra.common.mailbox.ContactConstants.A_middleName;
+import static com.zimbra.common.mailbox.ContactConstants.A_mobilePhone;
+import static com.zimbra.common.mailbox.ContactConstants.A_namePrefix;
+import static com.zimbra.common.mailbox.ContactConstants.A_nameSuffix;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCountry;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherStreet;
+import static com.zimbra.common.mailbox.ContactConstants.A_workCity;
+import static com.zimbra.common.mailbox.ContactConstants.A_workCountry;
+import static com.zimbra.common.mailbox.ContactConstants.A_workEmail1;
+import static com.zimbra.common.mailbox.ContactConstants.A_workEmail2;
+import static com.zimbra.common.mailbox.ContactConstants.A_workPhone;
+import static com.zimbra.common.mailbox.ContactConstants.A_workPhone2;
+import static com.zimbra.common.mailbox.ContactConstants.A_workPostalCode;
+import static com.zimbra.common.mailbox.ContactConstants.A_workState;
+import static com.zimbra.common.mailbox.ContactConstants.A_workStreet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -11,11 +43,9 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.ParsedContact;
 
 /**

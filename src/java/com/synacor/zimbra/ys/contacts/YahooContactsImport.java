@@ -32,8 +32,13 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.ParsedContact;
+/**
+ * @author Greg Solovyev
+ *
+ */
 public class YahooContactsImport implements DataImport {
     private static String DEFAULT_CONTACTS_URL = "https://social.yahooapis.com/v1/user/%s/contacts?format=%s&count=%d";
+    private static String DEFAULT_TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token";
 
     private DataSource mDataSource;
     public YahooContactsImport(DataSource ds) {
@@ -42,7 +47,7 @@ public class YahooContactsImport implements DataImport {
 
     @Override
     public void test() throws ServiceException {
-        String YSocialURLPattern = LC.get("yahoo_social_contacts_url_pattern");
+        String YSocialURLPattern = LC.get("zm_oauth_yahoo_contacts_uri_template");
         if(YSocialURLPattern == null || YSocialURLPattern.isEmpty()) {
             YSocialURLPattern = DEFAULT_CONTACTS_URL;
         }
@@ -97,13 +102,17 @@ public class YahooContactsImport implements DataImport {
     }
 
     private Pair<String, String> getAccessTokenAndGuid() throws ServiceException {
-        String clientId = LC.get("yahoo_oauth2_client_id");
+        String clientId = LC.get("zm_oauth_yahoo_client_id");
         if(clientId == null || clientId.isEmpty()) {
             throw ServiceException.FAILURE("yahoo_oauth2_client_id is not set in local config. Cannot access Yahoo API without a valid yahoo_oauth2_client_id.", null);
         }
-        String clientSecret = LC.get("yahoo_oauth2_client_secret");
+        String clientSecret = LC.get("zm_oauth_yahoo_client_secret");
         if(clientSecret == null || clientSecret.isEmpty()) {
             throw ServiceException.FAILURE("yahoo_oauth2_client_secret is not set in local config. Cannot access Yahoo API without a valid yahoo_oauth2_client_secret.", null);
+        }
+        String tokenUrl = LC.get("zm_oauth_yahoo_authenticate_uri");
+        if(tokenUrl == null || tokenUrl.isEmpty()) {
+            tokenUrl = DEFAULT_TOKEN_URL;
         }
         if(mDataSource == null) {
             throw ServiceException.FAILURE("DataSource object is NULL", null);
@@ -112,13 +121,9 @@ public class YahooContactsImport implements DataImport {
         if(refreshToken == null || refreshToken.isEmpty()) {
             throw ServiceException.FAILURE(String.format("Refresh token is not set for DataSource %s of Account %s. Cannot access Yahoo API without a valid refresh token.", mDataSource.getName(), mDataSource.getAccountId()), null);
         }
-        String tokenUrl = mDataSource.getOauthRefreshTokenUrl();
-        if(tokenUrl == null || tokenUrl.isEmpty()) {
-            throw ServiceException.FAILURE(String.format("Refresh token URL is not set for DataSource %s of Account %s. Cannot access Yahoo API without a valid refresh token URL.", mDataSource.getName(), mDataSource.getAccountId()), null);
-        }
         String accessToken = null;
         String YGuid = null;
-        HttpPost post = new HttpPost(mDataSource.getOauthRefreshTokenUrl());
+        HttpPost post = new HttpPost(tokenUrl);
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("refresh_token", refreshToken));
         params.add(new BasicNameValuePair("grant_type", "refresh_token"));
