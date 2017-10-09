@@ -1,8 +1,9 @@
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -10,9 +11,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.zimbra.client.ZContact;
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ContactSortBy;
 import com.zimbra.common.localconfig.LC;
 /**
  * @author Greg Solovyev
@@ -56,6 +59,26 @@ public class TestYahooContactsImport {
     }
 
     @Test
+    public void testFirstSync() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder = TestUtil.createFolder(zmbox, "/testCustomDS");
+        ZDataSource zds = new ZDataSource(yahooTestAccount, true);
+        zds.setImportClass("com.synacor.zimbra.OAuthDataImport");
+        zds.setRefreshToken(testToken);
+        zds.setHost(ZDataSource.SOURCE_HOST_YAHOO);
+        zds.setFolderId(folder.getId());
+        String dsId = zmbox.createDataSource(zds);
+        zds.setId(dsId);
+        try {
+            zmbox.importData(Arrays.asList(zds));
+        } catch (Exception e) {
+            fail("Should not throw an exception");
+        }
+        int found = waitForContacts(zmbox, folder, 10000, 1000, 20);
+        assertTrue("Expected to find 20 contacts. Found " + found, found >= 20);
+    }
+
+    @Test
     public void test() throws Exception {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = TestUtil.createFolder(zmbox, "/testCustomDS");
@@ -84,5 +107,19 @@ public class TestYahooContactsImport {
         String result = zmbox.testDataSource(zds);
         assertNotNull("DataImport::test should return non-null on error.", result);
         assertTrue("Expecting No known DataImport implementation for unknown.host in the error message", result.indexOf("No known DataImport implementation for unknown.host") >-1);
+    }
+
+    private int waitForContacts(ZMailbox zmbx, ZFolder folder, int timeout, int interval, int numContacts) throws Exception {
+        int found = 0;
+        while(timeout > 0) {
+            List<ZContact> results = zmbx.getContactsForFolder(folder.getId(), null, ContactSortBy.nameAsc, false, null);
+            found = results.size();
+            if(found >= numContacts) {
+                return results.size();
+            }
+            Thread.sleep(interval);
+            timeout -= interval;
+        }
+        return found;
     }
 }
