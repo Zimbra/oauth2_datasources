@@ -15,6 +15,8 @@ import static com.zimbra.common.mailbox.ContactConstants.A_homePhone2;
 import static com.zimbra.common.mailbox.ContactConstants.A_homePostalCode;
 import static com.zimbra.common.mailbox.ContactConstants.A_homeState;
 import static com.zimbra.common.mailbox.ContactConstants.A_homeStreet;
+import static com.zimbra.common.mailbox.ContactConstants.A_image;
+import static com.zimbra.common.mailbox.ContactConstants.A_jobTitle;
 import static com.zimbra.common.mailbox.ContactConstants.A_lastName;
 import static com.zimbra.common.mailbox.ContactConstants.A_middleName;
 import static com.zimbra.common.mailbox.ContactConstants.A_mobilePhone;
@@ -673,6 +675,22 @@ public class YahooContactsUtilTest {
                 + "\"created\": \"2008-06-03T08:54:28Z\","
                 + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/1705/name/3932\""
                 + "},"
+                + "{"
+                + "\"id\": 2932,"
+                + "\"type\": \"image\","
+                + "\"value\": {"
+                + "\"imageUrl\": \"https://proddata.xobni.yahoo.com/v4/contacts/bb52.1442/photo?alphatar_photo=true\","
+                + "\"imageType\": \"\","
+                + "\"imageSource\": \"yahoo:xobni\","
+                + "\"imageMetadata\": \"\""
+                + "},"
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2008-06-03T08:54:28Z\","
+                + "\"created\": \"2008-06-03T08:54:28Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/1705/name/3932\""
+                + "},"
                 + "{ "
                 + "\"id\": 3809, "
                 + "\"type\": \"address\","
@@ -690,6 +708,36 @@ public class YahooContactsUtilTest {
                 + "\"updated\": \"2009-04-11T22:02:18Z\","
                 + "\"created\": \"2008-06-03T08:54:22Z\","
                 + "\"uri\": \"http://social.yahooapis.com/v1/user/ABC83783423948JHDJS/contact/1609/address/3708\"},"
+                + "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"company\","
+                + "\"value\": \"Turbosquid, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"},"
+                + "{"
+                + "\"id\": 14393,"
+                + "\"type\": \"jobTitle\","
+                + "\"value\": \"Tester\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"},"
+                + "{"
+                + "\"id\": 14394,"
+                + "\"type\": \"unknown\","
+                + "\"value\": \"whatever\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"},"
                 +"{" 
                 + "\"id\": 3658,"
                 + "\"type\": \"birthday\","
@@ -724,6 +772,9 @@ public class YahooContactsUtilTest {
         assertNotNull("parsed contact should have home city", contact.getFields().get(A_homeCity));
         assertNotNull("parsed contact should have home state", contact.getFields().get(A_homeState));
         assertNotNull("parsed contact should have birthday field", contact.getFields().get(A_birthday));
+        assertNotNull("parsed contact should have job title field", contact.getFields().get(A_jobTitle));
+        assertNotNull("parsed contact should have company field", contact.getFields().get(A_company));
+        assertNotNull("parsed contact should have image field", contact.getFields().get(A_image));
         assertNull("parsed contact should NOT have anniversary field. Found: " + contact.getFields().get(A_anniversary), contact.getFields().get(A_anniversary));
     }
 }
