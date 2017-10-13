@@ -4,6 +4,7 @@ import static com.zimbra.common.mailbox.ContactConstants.A_company;
 import static com.zimbra.common.mailbox.ContactConstants.A_homeURL;
 import static com.zimbra.common.mailbox.ContactConstants.A_imAddress1;
 import static com.zimbra.common.mailbox.ContactConstants.A_jobTitle;
+import static com.zimbra.common.mailbox.ContactConstants.A_image;
 import static com.zimbra.common.mailbox.ContactConstants.A_nickname;
 import static com.zimbra.common.mailbox.ContactConstants.A_notes;
 import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom1;
@@ -66,7 +67,7 @@ import com.zimbra.cs.mime.ParsedContact;
 @SuppressWarnings("serial")
 public class YahooContactsUtil {
     static enum YContactFieldType {
-        guid, nickname, email, yahooid, otherid, phone, jobTitle, company, notes, link, custom, name, address, birthday, anniversary
+        guid, nickname, email, yahooid, otherid, phone, jobTitle, company, notes, link, custom, name, address, birthday, anniversary, jobtitle, image
     }
 
     //parts of contact JSON object
@@ -163,11 +164,19 @@ public class YahooContactsUtil {
             put("other", A_otherURL);
         }
     };
+    public static final String IMAGE_URL = "imageUrl";
     public static void parseSimpleField(JsonObject fieldObject, String key, Map<String, String> fields) {
         if(fieldObject.has(VALUE)) {
+            String zContactFieldName = key;
             String value = fieldObject.get(VALUE).getAsString();
             if(value != null && !value.isEmpty()) {
-                fields.put(key, value);
+                int i = 1;
+                String tmpName = zContactFieldName.replace("1", "");
+                while(fields.containsKey(zContactFieldName)) {
+                    i++;
+                    zContactFieldName = String.format("%s%d", tmpName, i);
+                }
+                fields.put(zContactFieldName, value);
             }
         }
     }
@@ -256,6 +265,21 @@ public class YahooContactsUtil {
         }
     }
 
+    public static void parseImageField(JsonObject fieldObject, String key, Map<String, String> fields) {
+        if(fieldObject.has(VALUE)) {
+            JsonElement valueElement = fieldObject.get(VALUE);
+            if(valueElement.isJsonObject()) {
+                JsonObject valueObject = valueElement.getAsJsonObject();
+                if(valueObject.has(IMAGE_URL)) {
+                    String value = valueObject.get(IMAGE_URL).getAsString();
+                    if(value != null && !value.isEmpty()) {
+                        fields.put(key, value);
+                    }
+                }
+            }
+        }
+    }
+
     public static void parseAddressField(JsonObject fieldObject, Map<String, String> fields) {
         String addressFlag = null;
         if(fieldObject.has(FLAGS)) {
@@ -327,61 +351,77 @@ public class YahooContactsUtil {
                     if(next.isJsonObject()) {
                         JsonObject fieldObj = next.getAsJsonObject();
                         if(fieldObj.has(TYPE) && fieldObj.has(VALUE)) {
-                            YahooContactsUtil.YContactFieldType type = YahooContactsUtil.YContactFieldType.valueOf(fieldObj.get(TYPE).getAsString().toLowerCase());
-                            switch (type) {
-                            case email:
-                                parseFlaggedField(fieldObj, A_email, EMAIL_FIELDS_MAP, contactFields);
-                                break;
-                            case phone:
-                                parseFlaggedField(fieldObj, A_homePhone, PHONE_FIELDS_MAP,  contactFields);
-                                break;
-                            case address:
-                                parseAddressField(fieldObj, contactFields);
-                                break;
-                            case birthday:
-                            case anniversary:
-                                Locale locale = null;
-                                if(ds != null) {
-                                    locale = ds.getAccount().getLocale();
+                            String fieldType = fieldObj.get(TYPE).getAsString().toLowerCase();
+                            YahooContactsUtil.YContactFieldType type = null;
+                            if(fieldType != null && !fieldType.isEmpty()) {
+                                try {
+                                    type = YahooContactsUtil.YContactFieldType.valueOf(fieldType);
+                                } catch(Exception e) {
+                                    ZimbraLog.extensions.debug("YahooContactsUtil cannot map Yahoo Contact field of type '%s' to any knwon contact field.", fieldType);
                                 }
-                                if(locale == null) {
-                                    try {
-                                        locale = Provisioning.getInstance().getConfig().getLocale();
-                                    } catch (Exception e) {
-                                        ZimbraLog.extensions.warn("Failed to get locale while parsing a contact");
+                            }
+                            if(type != null) {
+                                switch (type) {
+                                case email:
+                                    parseFlaggedField(fieldObj, A_email, EMAIL_FIELDS_MAP, contactFields);
+                                    break;
+                                case phone:
+                                    parseFlaggedField(fieldObj, A_homePhone, PHONE_FIELDS_MAP,  contactFields);
+                                    break;
+                                case address:
+                                    parseAddressField(fieldObj, contactFields);
+                                    break;
+                                case birthday:
+                                case anniversary:
+                                    Locale locale = null;
+                                    if(ds != null) {
+                                        locale = ds.getAccount().getLocale();
                                     }
-                                }
-                                if(locale == null) {
-                                    locale = Locale.US;
-                                }
-                                parseDateField(fieldObj, locale, contactFields);
-                                break;
-                            case name:
-                                parseNameField(fieldObj, contactFields);
-                                break;
-                            case company:
-                                parseSimpleField(fieldObj, A_company, contactFields);
-                                break;
-                            case notes:
-                                parseSimpleField(fieldObj, A_notes, contactFields);
-                                break;
-                            case nickname:
-                                parseSimpleField(fieldObj, A_nickname, contactFields);
-                                break;
-                            case jobTitle:
-                                parseSimpleField(fieldObj, A_jobTitle, contactFields);
-                                break;
-                            case link:
-                                parseFlaggedField(fieldObj, A_homeURL, LINK_FIELDS_MAP, contactFields);
-                                break;
-                            case yahooid:
-                                parseSimpleField(fieldObj, A_imAddress1, contactFields);
-                                break;
-                            case otherid:
-                            case custom:
+                                    if(locale == null) {
+                                        try {
+                                            locale = Provisioning.getInstance().getConfig().getLocale();
+                                        } catch (Exception e) {
+                                            ZimbraLog.extensions.warn("Failed to get locale while parsing a contact");
+                                        }
+                                    }
+                                    if(locale == null) {
+                                        locale = Locale.US;
+                                    }
+                                    parseDateField(fieldObj, locale, contactFields);
+                                    break;
+                                case name:
+                                    parseNameField(fieldObj, contactFields);
+                                    break;
+                                case company:
+                                    parseSimpleField(fieldObj, A_company, contactFields);
+                                    break;
+                                case notes:
+                                    parseSimpleField(fieldObj, A_notes, contactFields);
+                                    break;
+                                case nickname:
+                                    parseSimpleField(fieldObj, A_nickname, contactFields);
+                                    break;
+                                case jobTitle:
+                                    parseSimpleField(fieldObj, A_jobTitle, contactFields);
+                                    break;
+                                case link:
+                                    parseFlaggedField(fieldObj, A_homeURL, LINK_FIELDS_MAP, contactFields);
+                                    break;
+                                case yahooid:
+                                    parseSimpleField(fieldObj, A_imAddress1, contactFields);
+                                    break;
+                                case jobtitle:
+                                    parseSimpleField(fieldObj, A_jobTitle, contactFields);
+                                    break;
+                                case image:
+                                    parseImageField(fieldObj, A_image, contactFields);
+                                    break;
                                 default:
-                                parseSimpleField(fieldObj, A_otherCustom1, contactFields);
-                                break;
+                                    parseSimpleField(fieldObj, A_otherCustom1, contactFields);
+                                    break;
+                                }
+                            } else {
+                                parseSimpleField(fieldObj, fieldType, contactFields);
                             }
                         }
                     }

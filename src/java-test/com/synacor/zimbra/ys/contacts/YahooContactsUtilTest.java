@@ -15,6 +15,8 @@ import static com.zimbra.common.mailbox.ContactConstants.A_homePhone2;
 import static com.zimbra.common.mailbox.ContactConstants.A_homePostalCode;
 import static com.zimbra.common.mailbox.ContactConstants.A_homeState;
 import static com.zimbra.common.mailbox.ContactConstants.A_homeStreet;
+import static com.zimbra.common.mailbox.ContactConstants.A_image;
+import static com.zimbra.common.mailbox.ContactConstants.A_jobTitle;
 import static com.zimbra.common.mailbox.ContactConstants.A_lastName;
 import static com.zimbra.common.mailbox.ContactConstants.A_middleName;
 import static com.zimbra.common.mailbox.ContactConstants.A_mobilePhone;
@@ -31,6 +33,10 @@ import static com.zimbra.common.mailbox.ContactConstants.A_workPhone2;
 import static com.zimbra.common.mailbox.ContactConstants.A_workPostalCode;
 import static com.zimbra.common.mailbox.ContactConstants.A_workState;
 import static com.zimbra.common.mailbox.ContactConstants.A_workStreet;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom1;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom2;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom3;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -56,9 +62,10 @@ public class YahooContactsUtilTest {
 
     /**
      * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException
      */
     @Test
-    public void testParseSimpleField() {
+    public void testParseSimpleField() throws ServiceException {
         String sampleField = "{"
                 + "\"id\": 14392,"
                 + "\"type\": \"company\","
@@ -75,6 +82,121 @@ public class YahooContactsUtilTest {
         YahooContactsUtil.parseSimpleField(fieldObject, A_company, fields);
         assertTrue("should have 'company'", fields.containsKey(A_company));
         assertEquals("wrong company value", "Turbosquid, Inc", fields.get(A_company));
+    }
+
+    /**
+     * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException
+     */
+    @Test
+    public void testParseOtherSimpleField() throws ServiceException {
+        String sampleField = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"unknownField\","
+                + "\"value\": \"Turbosquid, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
+        Map<String, String> fields = new HashMap<String, String>();
+        fields.put(A_otherCustom1, "something");
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertEquals("wrong otherCustom1 value", "something", fields.get(A_otherCustom1));
+        assertTrue("should have 'otherCustom2'", fields.containsKey(A_otherCustom2));
+        assertEquals("wrong otherCustom2 value", "Turbosquid, Inc", fields.get(A_otherCustom2));
+    }
+
+    /**
+     * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException
+     */
+    @Test
+    public void testParseMaxOtherSimpleFields() throws ServiceException {
+        String sampleField = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"unknownField\","
+                + "\"value\": \"Turbosquid, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
+        Map<String, String> fields = new HashMap<String, String>();
+        YahooContactsUtil.parseSimpleField(fieldObject, "unknownField", fields);
+        assertFalse("should NOT have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertTrue("should have 'unknownField'", fields.containsKey("unknownField"));
+        assertEquals("wrong unknownField value", "Turbosquid, Inc", fields.get("unknownField"));
+
+        String sampleField1 = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"unknownField\","
+                + "\"value\": \"Synacor, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonObject fieldObject1 = parser.parse(sampleField1).getAsJsonObject();
+        YahooContactsUtil.parseSimpleField(fieldObject1, "unknownField", fields);
+        assertFalse("should NOT have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertFalse("should NOT have 'unknownField1'", fields.containsKey("unknownField1"));
+        assertTrue("should have 'unknownField'", fields.containsKey("unknownField"));
+        assertEquals("wrong unknownField value", "Turbosquid, Inc", fields.get("unknownField"));
+        assertTrue("should have 'unknownField2'", fields.containsKey("unknownField2"));
+        assertEquals("wrong unknownField2 value", "Synacor, Inc", fields.get("unknownField2"));
+
+        //test increasing the digit at the end of otherCustomX field
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertEquals("wrong otherCustom1 value", "Turbosquid, Inc", fields.get(A_otherCustom1));
+        YahooContactsUtil.parseSimpleField(fieldObject1, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom2'", fields.containsKey(A_otherCustom2));
+        assertEquals("wrong otherCustom2 value", "Synacor, Inc", fields.get(A_otherCustom2));
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom3'", fields.containsKey(A_otherCustom3));
+        assertEquals("wrong otherCustom3 value", "Turbosquid, Inc", fields.get(A_otherCustom3));
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom4'", fields.containsKey(A_otherCustom4));
+        assertEquals("wrong otherCustom4 value", "Turbosquid, Inc", fields.get(A_otherCustom4));
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom5'", fields.containsKey(A_otherCustom4));
+        assertEquals("wrong otherCustom5 value", "Turbosquid, Inc", fields.get("otherCustom5"));
+    }
+
+    /**
+     * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException 
+     */
+    @Test
+    public void testParseSecondPhoneField() throws ServiceException {
+        String sampleField = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"phone\","
+                + "\"value\": \"1234567890\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
+        Map<String, String> fields = new HashMap<String, String>();
+        fields.put(A_homePhone, "111334455");
+        YahooContactsUtil.parseSimpleField(fieldObject, A_homePhone, fields);
+        assertTrue("should have 'homePhone'", fields.containsKey(A_homePhone));
+        assertEquals("wrong homePhone value", "111334455", fields.get(A_homePhone));
+        assertTrue("should have 'homePhone2'", fields.containsKey(A_homePhone2));
+        assertEquals("wrong homePhone2 value", "1234567890", fields.get(A_homePhone2));
     }
 
     /**
@@ -673,6 +795,22 @@ public class YahooContactsUtilTest {
                 + "\"created\": \"2008-06-03T08:54:28Z\","
                 + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/1705/name/3932\""
                 + "},"
+                + "{"
+                + "\"id\": 2932,"
+                + "\"type\": \"image\","
+                + "\"value\": {"
+                + "\"imageUrl\": \"https://proddata.xobni.yahoo.com/v4/contacts/bb52.1442/photo?alphatar_photo=true\","
+                + "\"imageType\": \"\","
+                + "\"imageSource\": \"yahoo:xobni\","
+                + "\"imageMetadata\": \"\""
+                + "},"
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2008-06-03T08:54:28Z\","
+                + "\"created\": \"2008-06-03T08:54:28Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/1705/name/3932\""
+                + "},"
                 + "{ "
                 + "\"id\": 3809, "
                 + "\"type\": \"address\","
@@ -690,6 +828,36 @@ public class YahooContactsUtilTest {
                 + "\"updated\": \"2009-04-11T22:02:18Z\","
                 + "\"created\": \"2008-06-03T08:54:22Z\","
                 + "\"uri\": \"http://social.yahooapis.com/v1/user/ABC83783423948JHDJS/contact/1609/address/3708\"},"
+                + "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"company\","
+                + "\"value\": \"Turbosquid, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"},"
+                + "{"
+                + "\"id\": 14393,"
+                + "\"type\": \"jobTitle\","
+                + "\"value\": \"Tester\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"},"
+                + "{"
+                + "\"id\": 14394,"
+                + "\"type\": \"unknown\","
+                + "\"value\": \"whatever\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"},"
                 +"{" 
                 + "\"id\": 3658,"
                 + "\"type\": \"birthday\","
@@ -724,6 +892,9 @@ public class YahooContactsUtilTest {
         assertNotNull("parsed contact should have home city", contact.getFields().get(A_homeCity));
         assertNotNull("parsed contact should have home state", contact.getFields().get(A_homeState));
         assertNotNull("parsed contact should have birthday field", contact.getFields().get(A_birthday));
+        assertNotNull("parsed contact should have job title field", contact.getFields().get(A_jobTitle));
+        assertNotNull("parsed contact should have company field", contact.getFields().get(A_company));
+        assertNotNull("parsed contact should have image field", contact.getFields().get(A_image));
         assertNull("parsed contact should NOT have anniversary field. Found: " + contact.getFields().get(A_anniversary), contact.getFields().get(A_anniversary));
     }
 }
