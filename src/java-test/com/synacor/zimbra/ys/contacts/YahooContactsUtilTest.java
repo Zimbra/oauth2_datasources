@@ -131,24 +131,46 @@ public class YahooContactsUtilTest {
         JsonParser parser = new JsonParser();
         JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
         Map<String, String> fields = new HashMap<String, String>();
+        YahooContactsUtil.parseSimpleField(fieldObject, "unknownField", fields);
+        assertFalse("should NOT have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertTrue("should have 'unknownField'", fields.containsKey("unknownField"));
+        assertEquals("wrong unknownField value", "Turbosquid, Inc", fields.get("unknownField"));
+
+        String sampleField1 = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"unknownField\","
+                + "\"value\": \"Synacor, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonObject fieldObject1 = parser.parse(sampleField1).getAsJsonObject();
+        YahooContactsUtil.parseSimpleField(fieldObject1, "unknownField", fields);
+        assertFalse("should NOT have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertFalse("should NOT have 'unknownField1'", fields.containsKey("unknownField1"));
+        assertTrue("should have 'unknownField'", fields.containsKey("unknownField"));
+        assertEquals("wrong unknownField value", "Turbosquid, Inc", fields.get("unknownField"));
+        assertTrue("should have 'unknownField2'", fields.containsKey("unknownField2"));
+        assertEquals("wrong unknownField2 value", "Synacor, Inc", fields.get("unknownField2"));
+
+        //test increasing the digit at the end of otherCustomX field
         YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
         assertTrue("should have 'otherCustom1'", fields.containsKey(A_otherCustom1));
         assertEquals("wrong otherCustom1 value", "Turbosquid, Inc", fields.get(A_otherCustom1));
-        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        YahooContactsUtil.parseSimpleField(fieldObject1, A_otherCustom1, fields);
         assertTrue("should have 'otherCustom2'", fields.containsKey(A_otherCustom2));
-        assertEquals("wrong otherCustom2 value", "Turbosquid, Inc", fields.get(A_otherCustom2));
+        assertEquals("wrong otherCustom2 value", "Synacor, Inc", fields.get(A_otherCustom2));
         YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
         assertTrue("should have 'otherCustom3'", fields.containsKey(A_otherCustom3));
         assertEquals("wrong otherCustom3 value", "Turbosquid, Inc", fields.get(A_otherCustom3));
         YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
         assertTrue("should have 'otherCustom4'", fields.containsKey(A_otherCustom4));
         assertEquals("wrong otherCustom4 value", "Turbosquid, Inc", fields.get(A_otherCustom4));
-        try {
-            YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
-            fail("should have thrown an exception");
-        } catch (ServiceException e) {
-            //good
-        }
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom5'", fields.containsKey(A_otherCustom4));
+        assertEquals("wrong otherCustom5 value", "Turbosquid, Inc", fields.get("otherCustom5"));
     }
 
     /**
