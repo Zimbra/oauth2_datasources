@@ -33,11 +33,16 @@ import static com.zimbra.common.mailbox.ContactConstants.A_workPhone2;
 import static com.zimbra.common.mailbox.ContactConstants.A_workPostalCode;
 import static com.zimbra.common.mailbox.ContactConstants.A_workState;
 import static com.zimbra.common.mailbox.ContactConstants.A_workStreet;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom1;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom2;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom3;
+import static com.zimbra.common.mailbox.ContactConstants.A_otherCustom4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -58,9 +63,10 @@ public class YahooContactsUtilTest {
 
     /**
      * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException
      */
     @Test
-    public void testParseSimpleField() {
+    public void testParseSimpleField() throws ServiceException {
         String sampleField = "{"
                 + "\"id\": 14392,"
                 + "\"type\": \"company\","
@@ -77,6 +83,99 @@ public class YahooContactsUtilTest {
         YahooContactsUtil.parseSimpleField(fieldObject, A_company, fields);
         assertTrue("should have 'company'", fields.containsKey(A_company));
         assertEquals("wrong company value", "Turbosquid, Inc", fields.get(A_company));
+    }
+
+    /**
+     * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException
+     */
+    @Test
+    public void testParseOtherSimpleField() throws ServiceException {
+        String sampleField = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"unknownField\","
+                + "\"value\": \"Turbosquid, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
+        Map<String, String> fields = new HashMap<String, String>();
+        fields.put(A_otherCustom1, "something");
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertEquals("wrong otherCustom1 value", "something", fields.get(A_otherCustom1));
+        assertTrue("should have 'otherCustom2'", fields.containsKey(A_otherCustom2));
+        assertEquals("wrong otherCustom2 value", "Turbosquid, Inc", fields.get(A_otherCustom2));
+    }
+
+    /**
+     * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException
+     */
+    @Test
+    public void testParseMaxOtherSimpleFields() throws ServiceException {
+        String sampleField = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"unknownField\","
+                + "\"value\": \"Turbosquid, Inc\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
+        Map<String, String> fields = new HashMap<String, String>();
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom1'", fields.containsKey(A_otherCustom1));
+        assertEquals("wrong otherCustom1 value", "Turbosquid, Inc", fields.get(A_otherCustom1));
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom2'", fields.containsKey(A_otherCustom2));
+        assertEquals("wrong otherCustom2 value", "Turbosquid, Inc", fields.get(A_otherCustom2));
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom3'", fields.containsKey(A_otherCustom3));
+        assertEquals("wrong otherCustom3 value", "Turbosquid, Inc", fields.get(A_otherCustom3));
+        YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+        assertTrue("should have 'otherCustom4'", fields.containsKey(A_otherCustom4));
+        assertEquals("wrong otherCustom4 value", "Turbosquid, Inc", fields.get(A_otherCustom4));
+        try {
+            YahooContactsUtil.parseSimpleField(fieldObject, A_otherCustom1, fields);
+            fail("should have thrown an exception");
+        } catch (ServiceException e) {
+            //good
+        }
+    }
+
+    /**
+     * Test method for {@link com.synacor.zimbra.ys.contacts.YahooContactsUtil#parseSimpleField(com.google.gson.JsonObject, java.lang.String, java.util.Map)}.
+     * @throws ServiceException 
+     */
+    @Test
+    public void testParseSecondPhoneField() throws ServiceException {
+        String sampleField = "{"
+                + "\"id\": 14392,"
+                + "\"type\": \"phone\","
+                + "\"value\": \"1234567890\","
+                + "\"editedBy\": \"OWNER\","
+                + "\"flags\": [],"
+                + "\"categories\": [],"
+                + "\"updated\": \"2010-12-01T16:36:06Z\","
+                + "\"created\": \"2010-12-01T16:36:06Z\","
+                + "\"uri\": \"http://social.yahooapis.com/v1/user/Y7B2YG3W4RG6HESVPWQZXSH6JE/contact/6364/company/14392\"}";
+        JsonParser parser = new JsonParser();
+        JsonObject fieldObject = parser.parse(sampleField).getAsJsonObject();
+        Map<String, String> fields = new HashMap<String, String>();
+        fields.put(A_homePhone, "111334455");
+        YahooContactsUtil.parseSimpleField(fieldObject, A_homePhone, fields);
+        assertTrue("should have 'homePhone'", fields.containsKey(A_homePhone));
+        assertEquals("wrong homePhone value", "111334455", fields.get(A_homePhone));
+        assertTrue("should have 'homePhone2'", fields.containsKey(A_homePhone2));
+        assertEquals("wrong homePhone2 value", "1234567890", fields.get(A_homePhone2));
     }
 
     /**
