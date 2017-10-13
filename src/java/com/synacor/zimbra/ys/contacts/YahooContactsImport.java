@@ -153,13 +153,13 @@ public class YahooContactsImport implements DataImport {
                     String name = parser.nextName();
                     if(name.equalsIgnoreCase("access_token")) {
                         accessToken = parser.nextString();
-                        ZimbraLog.extensions.debug("found access_token %s", accessToken);
+                        ZimbraLog.extensions.trace("found access_token %s", accessToken);
                     } else if(name.equalsIgnoreCase("xoauth_yahoo_guid")) {
                         YGuid = parser.nextString();
-                        ZimbraLog.extensions.debug("found xoauth_yahoo_guid %s", YGuid);
+                        ZimbraLog.extensions.trace("found xoauth_yahoo_guid %s", YGuid);
                     } else if(name.equalsIgnoreCase("refresh_token")) {
                         refreshToken = parser.nextString();
-                        ZimbraLog.extensions.debug("found refresh_token %s", refreshToken);
+                        ZimbraLog.extensions.trace("found refresh_token %s", refreshToken);
                     } else {
                         parser.skipValue();
                     }
@@ -208,16 +208,21 @@ public class YahooContactsImport implements DataImport {
                 throw ServiceException.FAILURE(String.format("Invalid value in zimbraDataSourceAttribute: %s", val), e);
             }
         }
-        HttpGet get = new HttpGet(String.format(YSocialURLPattern, tokenAndGuid.getSecond(), "json", rev));
+        String url = String.format(YSocialURLPattern, tokenAndGuid.getSecond(), "json", rev);
+        HttpGet get = new HttpGet(url);
         String authorizationHeader = String.format("Bearer %s", tokenAndGuid.getFirst());
         get.addHeader(HttpHeaders.AUTHORIZATION, authorizationHeader);
         HttpClient client = ZimbraHttpClientManager.getInstance().getExternalHttpClient();
         JsonArray jsonContacts = null;
         HttpResponse response = null;
         String respContent = "";
+        //log this only at the most verbose level, because this contains privileged information
+        ZimbraLog.extensions.trace("Attempting to sync Yahoo contacts. URL: %s. authorizationHeader: %", url, authorizationHeader);
         try {
             response = client.execute(get);
             respContent = IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+            //log this only at the most verbose level, because this contains privileged information
+            ZimbraLog.extensions.trace("contacts sync response from Yahoo %s", respContent);
             JsonParser parser = new JsonParser();
             JsonElement jsonResponse = parser.parse(respContent);
             if(jsonResponse != null && jsonResponse.isJsonObject()) {
@@ -228,11 +233,13 @@ public class YahooContactsImport implements DataImport {
                         jsonContacts = contactsObject.get("contacts").getAsJsonArray();
                         List<ParsedContact> clist = new ArrayList<ParsedContact>();
                         for(JsonElement contactElement : jsonContacts) {
-                            if(contactElement.isJsonObject() && contactElement.getAsJsonObject().has("op")
-                                    && contactElement.getAsJsonObject().get("op").getAsString().equalsIgnoreCase("add")) {
-                                ParsedContact contact = YahooContactsUtil.parseYContact(contactElement.getAsJsonObject(), mDataSource);
-                                if(contact != null) {
-                                    clist.add(contact);
+                            if(contactElement.isJsonObject() && contactElement.getAsJsonObject().has("op")) {
+                                String op = contactElement.getAsJsonObject().get("op").getAsString();
+                                if("add".equalsIgnoreCase(op)) {
+                                    ParsedContact contact = YahooContactsUtil.parseYContact(contactElement.getAsJsonObject(), mDataSource);
+                                    if(contact != null) {
+                                        clist.add(contact);
+                                    }
                                 }
                             }
                         }
@@ -249,16 +256,16 @@ public class YahooContactsImport implements DataImport {
                         dsAttrs.put(Provisioning.A_zimbraDataSourceAttribute, rev);
                         Provisioning.getInstance().modifyDataSource(mDataSource.getAccount(), mDataSource.getId(), dsAttrs);
                     } else {
-                        ZimbraLog.extensions.debug("Did not find 'rev' element in 'contactsync' object");
+                        ZimbraLog.extensions.debug("Did not find 'rev' element in 'contactsync' object. Response body: %s", respContent);
                     }
                 } else {
-                    ZimbraLog.extensions.debug("Did not find 'contactsync' element in JSON response object");
+                    ZimbraLog.extensions.debug("Did not find 'contactsync' element in JSON response object. Response body: %s", respContent);
                 }
             } else {
-                ZimbraLog.extensions.debug("Did not find JSON response object");
+                ZimbraLog.extensions.debug("Did not find JSON response object. Response body: %s", respContent);
             }
         } catch (UnsupportedOperationException | IOException e) {
-            throw ServiceException.FAILURE("Data source test failed. Failed to fetch contacts from  Yahoo Contacts API for testing", e);
+            throw ServiceException.FAILURE(String.format("Data source test failed. Failed to fetch contacts from  Yahoo Contacts API for testing. Response body: %s", respContent), e);
         }
     }
 }
