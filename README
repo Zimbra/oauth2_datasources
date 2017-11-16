@@ -10,7 +10,7 @@ In order to use Yahoo Contacts
  e.g. via zmprov:
 
 
-zmprov cds user1@zcs-dev.test oauth myadress@yahoo.com zimbraDataSourceEnabled TRUE zimbraDataSourceFolderId 7 zimbraDataSourceImportClassName com.synacor.zimbra.YahooContactsImport
+zmprov cds user1@zcs-dev.test unknown myadress@yahoo.com zimbraDataSourceEnabled TRUE zimbraDataSourceFolderId 7 zimbraDataSourceImportClassName com.synacor.zimbra.OAuthDataImport zimbraDataSourceHost yahoo.com
 
  4) obtain an oauth2 refresh token from Yahoo API and assign it to the datasource:
 
