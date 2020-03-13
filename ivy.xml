@@ -7,7 +7,7 @@
  <dependencies>
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="log4j" name="log4j" rev="1.2.16" />
-  <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
   <dependency org="commons-codec" name="commons-codec" rev="1.7"/>
   <dependency org="commons-io" name="commons-io" rev="1.4"/>
   <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.2"/>
@@ -22,7 +22,7 @@
   <dependency org="com.google.code.gson" name="gson" rev="2.8.1"/>
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="org.json" name="json" rev="20090211" />
-  <dependency org="com.google.guava" name="guava" rev="13.0.1" />  
+  <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}" />
   <dependency org="com.unboundid" name="unboundid-ldapsdk" rev="2.3.5" />
  </dependencies>
 </ivy-module>
